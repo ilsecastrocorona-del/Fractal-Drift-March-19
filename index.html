@@ -4,402 +4,178 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FRACTAL DRIFT</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --c1: #ff2d78;
-    --c2: #00fff7;
-    --c3: #bf5fff;
-    --c4: #ffcc00;
-    --bg: #04000d;
-  }
-
-  html, body {
-    width: 100%; height: 100%;
-    background: var(--bg);
-    overflow: hidden;
-    font-family: 'Share Tech Mono', monospace;
-    cursor: none;
-  }
-
-  canvas {
-    display: block;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-  }
-
-  #ui {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    pointer-events: none;
-    z-index: 10;
-    padding: 2rem 2.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #04000d; overflow: hidden; cursor: none; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
   #title {
-    font-family: 'Orbitron', sans-serif;
-    font-weight: 900;
-    font-size: clamp(1.4rem, 3vw, 2.2rem);
-    letter-spacing: 0.18em;
-    color: var(--c2);
-    text-shadow:
-      0 0 10px var(--c2),
-      0 0 30px var(--c2),
-      0 0 60px rgba(0,255,247,0.4);
-    line-height: 1;
+    position: fixed; top: 1.8rem; left: 2rem;
+    font-family: 'Orbitron', sans-serif; font-weight: 900;
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem); letter-spacing: 0.15em;
+    color: #00fff7; pointer-events: none; z-index: 10;
+    text-shadow: 0 0 20px rgba(0,255,247,0.6);
   }
-
-  #subtitle {
-    font-size: 0.62rem;
-    letter-spacing: 0.3em;
-    color: var(--c3);
-    margin-top: 0.4rem;
-    text-shadow: 0 0 8px var(--c3);
-    text-transform: uppercase;
+  #sub {
+    position: fixed; top: calc(1.8rem + clamp(1.2rem,2.5vw,1.8rem) + 6px); left: 2rem;
+    font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.3em; color: #bf5fff; pointer-events: none; z-index: 10; text-transform: uppercase;
   }
-
-  #stats {
-    text-align: right;
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: rgba(0,255,247,0.45);
-    line-height: 2;
+  #hint {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace; font-size: 0.55rem;
+    letter-spacing: 0.3em; color: rgba(191,95,255,0.35);
+    pointer-events: none; z-index: 10; text-transform: uppercase; white-space: nowrap;
   }
-
-  #stats span {
-    color: var(--c2);
-    text-shadow: 0 0 6px var(--c2);
-  }
-
-  #bottom {
-    position: fixed;
-    bottom: 1.8rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.58rem;
-    letter-spacing: 0.35em;
-    color: rgba(191,95,255,0.35);
-    pointer-events: none;
-    z-index: 10;
-    text-transform: uppercase;
-    text-shadow: 0 0 10px var(--c3);
-  }
-
-  #cursor {
-    position: fixed;
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: var(--c1);
-    box-shadow: 0 0 16px var(--c1), 0 0 40px rgba(255,45,120,0.5);
-    pointer-events: none;
-    z-index: 100;
-    transform: translate(-50%, -50%);
-    transition: width 0.1s, height 0.1s;
-  }
-
-  #cursor-ring {
-    position: fixed;
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    border: 1px solid rgba(0,255,247,0.5);
-    pointer-events: none;
-    z-index: 99;
-    transform: translate(-50%, -50%);
-    transition: left 0.08s ease-out, top 0.08s ease-out;
-    box-shadow: 0 0 10px rgba(0,255,247,0.2) inset;
-  }
-
-  @keyframes scanline {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
-  }
-
-  #scanline {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(transparent, rgba(0,255,247,0.04), transparent);
-    pointer-events: none;
-    z-index: 5;
-    animation: scanline 6s linear infinite;
-  }
-
-  #vignette {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse at center, transparent 40%, rgba(4,0,13,0.85) 100%);
-    pointer-events: none;
-    z-index: 4;
-  }
+  #dot { position: fixed; width: 8px; height: 8px; border-radius: 50%; background: #ff2d78; pointer-events: none; z-index: 100; transform: translate(-50%,-50%); }
 </style>
 </head>
 <body>
-
 <canvas id="c"></canvas>
-
-<div id="vignette"></div>
-<div id="scanline"></div>
-
-<div id="ui">
-  <div>
-    <div id="title">FRACTAL DRIFT</div>
-    <div id="subtitle">particle field · move to interact</div>
-  </div>
-  <div id="stats">
-    PARTICLES &nbsp;<span id="s-count">0</span><br>
-    DEPTH &nbsp;<span id="s-depth">0</span><br>
-    VELOCITY &nbsp;<span id="s-vel">0.00</span>
-  </div>
-</div>
-
-<div id="bottom">MOVE YOUR CURSOR TO DISTORT THE FIELD</div>
-
-<div id="cursor"></div>
-<div id="cursor-ring"></div>
+<div id="title">FRACTAL DRIFT</div>
+<div id="sub">fractal field · move to interact</div>
+<div id="hint">move your cursor to grow fractals</div>
+<div id="dot"></div>
 
 <script>
 const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const cursor = document.getElementById('cursor');
-const ring = document.getElementById('cursor-ring');
-const sCount = document.getElementById('s-count');
-const sDepth = document.getElementById('s-depth');
-const sVel = document.getElementById('s-vel');
+const ctx = canvas.getContext('2d', { alpha: false });
+const dot = document.getElementById('dot');
 
-let W, H, mouse = { x: -9999, y: -9999 }, mouseVel = 0;
-let prevMX = 0, prevMY = 0;
-let frame = 0;
-
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
 resize();
 window.addEventListener('resize', () => { resize(); initParticles(); });
 
+const mouse = { x: -999, y: -999 };
+let mouseVel = 0, prevX = 0, prevY = 0;
 window.addEventListener('mousemove', e => {
-  const dx = e.clientX - prevMX, dy = e.clientY - prevMY;
-  mouseVel = Math.sqrt(dx*dx + dy*dy);
-  prevMX = mouse.x = e.clientX;
-  prevMY = mouse.y = e.clientY;
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top = e.clientY + 'px';
-  ring.style.left = e.clientX + 'px';
-  ring.style.top = e.clientY + 'px';
+  const dx = e.clientX - prevX, dy = e.clientY - prevY;
+  mouseVel = Math.min(Math.sqrt(dx*dx + dy*dy), 30);
+  prevX = mouse.x = e.clientX;
+  prevY = mouse.y = e.clientY;
+  dot.style.left = e.clientX + 'px';
+  dot.style.top = e.clientY + 'px';
 });
 
-// ── Colors ──────────────────────────────────────────────────────────────────
-const COLORS = ['#ff2d78','#00fff7','#bf5fff','#ffcc00','#ff6b35','#00ffaa'];
-
-// ── Particles ────────────────────────────────────────────────────────────────
+const COLORS = ['#ff2d78','#00fff7','#bf5fff','#ffcc00','#00ffaa','#ff6b35'];
+const COUNT = 150;
 let particles = [];
-const MAX_P = 380;
 
-function mkParticle(x, y) {
-  const angle = Math.random() * Math.PI * 2;
-  const speed = Math.random() * 0.8 + 0.1;
+function mkP() {
+  const a = Math.random() * Math.PI * 2;
+  const s = Math.random() * 0.6 + 0.15;
   return {
-    x: x ?? Math.random() * W,
-    y: y ?? Math.random() * H,
-    ox: 0, oy: 0,
-    vx: Math.cos(angle) * speed,
-    vy: Math.sin(angle) * speed,
-    life: Math.random(),
-    maxLife: 0.6 + Math.random() * 0.4,
-    size: Math.random() * 2.2 + 0.5,
+    x: Math.random() * W, y: Math.random() * H,
+    vx: Math.cos(a) * s, vy: Math.sin(a) * s,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    trail: [],
-    trailLen: Math.floor(Math.random() * 14) + 4,
-    fractalTimer: 0,
-    fractalInterval: 60 + Math.random() * 120
+    size: Math.random() * 1.6 + 0.5,
+    trail: [], trailLen: Math.floor(Math.random() * 10) + 4,
+    life: Math.random(), maxLife: 0.6 + Math.random() * 0.4
   };
 }
-
-function initParticles() {
-  particles = Array.from({ length: MAX_P }, () => mkParticle());
-}
+function initParticles() { particles = Array.from({ length: COUNT }, mkP); }
 initParticles();
 
-// ── Fractal branch burst ─────────────────────────────────────────────────────
-let bursts = [];
+let trees = [], frame = 0, burstCooldown = 0;
 
-function addBurst(x, y, color, depth) {
-  if (depth <= 0) return;
-  const branches = depth === 3 ? 7 : 5;
-  for (let i = 0; i < branches; i++) {
-    const a = (i / branches) * Math.PI * 2 + Math.random() * 0.4;
-    const spd = (1 + Math.random()) * (depth * 0.5);
-    bursts.push({
-      x, y, vx: Math.cos(a)*spd, vy: Math.sin(a)*spd,
-      color, depth, life: 1,
-      size: depth * 1.2 + 0.5,
-      children: false
-    });
+function buildBranches(x, y, angle, depth, len, color, out) {
+  if (depth === 0 || len < 1.5) return;
+  const x2 = x + Math.cos(angle) * len;
+  const y2 = y + Math.sin(angle) * len;
+  out.push({ x1: x, y1: y, x2, y2, depth, color, progress: 0 });
+  const spread = 0.3 + Math.random() * 0.25;
+  buildBranches(x2, y2, angle - spread, depth-1, len*0.68, color, out);
+  buildBranches(x2, y2, angle + spread, depth-1, len*0.68, color, out);
+  if (depth > 2 && Math.random() < 0.4)
+    buildBranches(x2, y2, angle + (Math.random()-0.5)*0.5, depth-1, len*0.55, color, out);
+}
+
+function spawnFractalBurst(x, y, color) {
+  const numTrees = 4 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < numTrees; i++) {
+    const angle = (i / numTrees) * Math.PI * 2 + Math.random() * 0.4;
+    const branches = [];
+    buildBranches(x, y, angle, 5, 28 + Math.random() * 18, color, branches);
+    trees.push({ branches, life: 1, color });
   }
 }
 
-// ── Flow field (Perlin-ish via sine) ─────────────────────────────────────────
 function flowAngle(x, y, t) {
-  return (
-    Math.sin(x * 0.007 + t * 0.3) +
-    Math.cos(y * 0.007 + t * 0.2) +
-    Math.sin((x + y) * 0.005 + t * 0.15)
-  ) * Math.PI;
+  return (Math.sin(x*0.007+t*0.22) + Math.cos(y*0.007+t*0.18)) * Math.PI;
 }
 
-// ── Draw loop ────────────────────────────────────────────────────────────────
 function draw() {
   frame++;
-  const t = frame * 0.01;
-
-  ctx.fillStyle = 'rgba(4,0,13,0.18)';
+  const t = frame * 0.011;
+  ctx.fillStyle = 'rgba(4,0,13,0.2)';
   ctx.fillRect(0, 0, W, H);
 
-  // mouse influence radius (grows with speed)
-  const mRadius = 120 + Math.min(mouseVel * 3, 180);
+  const mR = 110 + Math.min(mouseVel*3.5, 130);
+  burstCooldown--;
 
-  // ── particles ──
-  for (let i = particles.length - 1; i >= 0; i--) {
+  for (let i = 0; i < particles.length; i++) {
     const p = particles[i];
-
-    // flow field nudge
     const fa = flowAngle(p.x, p.y, t);
-    p.vx += Math.cos(fa) * 0.012;
-    p.vy += Math.sin(fa) * 0.012;
-
-    // mouse attraction / repulsion
-    const dx = mouse.x - p.x, dy = mouse.y - p.y;
-    const dist = Math.sqrt(dx*dx + dy*dy) + 1;
-    if (dist < mRadius) {
-      const force = (1 - dist / mRadius) * 0.6;
-      // attract when slow, repel when fast
-      const dir = mouseVel > 6 ? -1 : 1;
-      p.vx += (dx / dist) * force * dir;
-      p.vy += (dy / dist) * force * dir;
+    p.vx += Math.cos(fa)*0.009; p.vy += Math.sin(fa)*0.009;
+    const dx = mouse.x-p.x, dy = mouse.y-p.y;
+    const dist = Math.sqrt(dx*dx+dy*dy)+1;
+    if (dist < mR) {
+      const force = (1-dist/mR)*0.45;
+      const dir = mouseVel > 5 ? -1 : 1;
+      p.vx += (dx/dist)*force*dir; p.vy += (dy/dist)*force*dir;
+      if (burstCooldown < 0 && Math.random() < 0.004) {
+        spawnFractalBurst(p.x, p.y, p.color);
+        burstCooldown = 25;
+      }
     }
-
-    // damping
-    p.vx *= 0.97;
-    p.vy *= 0.97;
-
+    p.vx *= 0.976; p.vy *= 0.976;
     p.trail.push({ x: p.x, y: p.y });
     if (p.trail.length > p.trailLen) p.trail.shift();
-
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life += 0.004;
-
-    // fractal burst trigger
-    p.fractalTimer++;
-    if (p.fractalTimer > p.fractalInterval && dist < mRadius * 1.5) {
-      addBurst(p.x, p.y, p.color, 3);
-      p.fractalTimer = 0;
-      p.fractalInterval = 60 + Math.random() * 120;
+    p.x += p.vx; p.y += p.vy; p.life += 0.004;
+    if (p.x<-30||p.x>W+30||p.y<-30||p.y>H+30||p.life>p.maxLife) { particles[i]=mkP(); continue; }
+    if (p.trail.length > 1) {
+      ctx.beginPath(); ctx.moveTo(p.trail[0].x, p.trail[0].y);
+      for (let j=1; j<p.trail.length; j++) ctx.lineTo(p.trail[j].x, p.trail[j].y);
+      ctx.strokeStyle=p.color; ctx.lineWidth=p.size*0.35; ctx.globalAlpha=0.18; ctx.stroke();
     }
-
-    // recycle off-screen
-    if (p.x < -20 || p.x > W+20 || p.y < -20 || p.y > H+20 || p.life > p.maxLife) {
-      particles[i] = mkParticle();
-      continue;
-    }
-
-    // draw trail
-    if (p.trail.length > 2) {
-      ctx.beginPath();
-      ctx.moveTo(p.trail[0].x, p.trail[0].y);
-      for (let j = 1; j < p.trail.length; j++) ctx.lineTo(p.trail[j].x, p.trail[j].y);
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = p.size * 0.5;
-      ctx.globalAlpha = 0.18;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
-
-    // draw dot
-    const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-    glow.addColorStop(0, p.color);
-    glow.addColorStop(1, 'transparent');
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI*2);
-    ctx.fillStyle = glow;
-    ctx.globalAlpha = 0.55;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-    ctx.fillStyle = p.color;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 10;
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.globalAlpha=0.85;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.fillStyle=p.color; ctx.fill(); ctx.globalAlpha=1;
   }
 
-  // ── fractal bursts ──
-  for (let i = bursts.length - 1; i >= 0; i--) {
-    const b = bursts[i];
-    b.x += b.vx;
-    b.y += b.vy;
-    b.vx *= 0.93;
-    b.vy *= 0.93;
-    b.life -= 0.025;
-
-    if (b.life <= 0) { bursts.splice(i, 1); continue; }
-
-    // spawn children once at half life
-    if (!b.children && b.life < 0.5 && b.depth > 1) {
-      b.children = true;
-      addBurst(b.x, b.y, b.color, b.depth - 1);
-    }
-
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.size * b.life, 0, Math.PI*2);
-    ctx.fillStyle = b.color;
-    ctx.globalAlpha = b.life * 0.9;
-    ctx.shadowColor = b.color;
-    ctx.shadowBlur = 16;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.globalAlpha = 1;
-  }
-
-  // ── connection lines between close particles ──
-  ctx.lineWidth = 0.4;
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i+1; j < particles.length; j++) {
-      const dx = particles[i].x - particles[j].x;
-      const dy = particles[i].y - particles[j].y;
-      const d = dx*dx + dy*dy;
-      if (d < 6400) {
-        const alpha = (1 - d / 6400) * 0.25;
-        ctx.beginPath();
-        ctx.moveTo(particles[i].x, particles[i].y);
-        ctx.lineTo(particles[j].x, particles[j].y);
-        ctx.strokeStyle = particles[i].color;
-        ctx.globalAlpha = alpha;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
+  ctx.lineWidth=0.3;
+  for (let i=0; i<particles.length; i+=2) {
+    for (let j=i+2; j<particles.length; j+=2) {
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      const d2=dx*dx+dy*dy;
+      if (d2<4800) {
+        ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=particles[i].color; ctx.globalAlpha=(1-d2/4800)*0.15; ctx.stroke(); ctx.globalAlpha=1;
       }
     }
   }
 
-  // ── stats ──
-  if (frame % 12 === 0) {
-    sCount.textContent = particles.length + bursts.length;
-    sDepth.textContent = bursts.filter(b => b.depth === 3).length;
-    sVel.textContent = Math.min(mouseVel, 99.99).toFixed(2);
-    mouseVel *= 0.85;
+  for (let t2=trees.length-1; t2>=0; t2--) {
+    const tree=trees[t2];
+    tree.life -= 0.008;
+    if (tree.life<=0) { trees.splice(t2,1); continue; }
+    for (let b=0; b<tree.branches.length; b++) {
+      const br=tree.branches[b];
+      br.progress=Math.min(1, br.progress+0.06);
+      if (br.progress<=0) continue;
+      const ex=br.x1+(br.x2-br.x1)*br.progress;
+      const ey=br.y1+(br.y2-br.y1)*br.progress;
+      ctx.beginPath(); ctx.moveTo(br.x1,br.y1); ctx.lineTo(ex,ey);
+      ctx.strokeStyle=tree.color;
+      ctx.lineWidth=Math.max(0.4,(br.depth/5)*1.4);
+      ctx.globalAlpha=Math.min(tree.life*(br.depth/6)*0.85, 0.9);
+      ctx.stroke(); ctx.globalAlpha=1;
+    }
   }
-
+  if (trees.length>40) trees.splice(0, trees.length-40);
   requestAnimationFrame(draw);
 }
-
 draw();
 </script>
 </body>
